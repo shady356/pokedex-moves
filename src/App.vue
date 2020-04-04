@@ -1,17 +1,38 @@
 <template>
   <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
+    foobar
   </div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
 
+import axios from 'axios'
 export default {
   name: 'App',
-  components: {
-    HelloWorld
+  data() {
+    return {
+      localhostBase: 'http://localhost:8080',
+      networkBase: 'http://192.168.0.18:8080/',
+
+      pokemonList: []
+    }
+  },
+  computed: {
+    BASE_URL () {
+      return this.networkBase
+    }
+  },
+  methods: {
+    getPokemon(pokemonId) {
+      axios.get(`${this.BASE_URL}/pokemon-form/${pokemonId}/`)
+      .then(response => {
+        this.pokemonList.push(response.data)
+      })
+      .catch(error => {
+        console.log(error)
+        // this.errored = true
+      })
+    }
   }
 }
 </script>
@@ -19,10 +40,5 @@ export default {
 <style>
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
 }
 </style>
