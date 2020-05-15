@@ -14,9 +14,9 @@ export default {
     return {
       localhostBase: "http://localhost:8080",
       pokemonMoves: null,
-      testMove: null,
       moves: [],
-      takenMoves: []
+      jsonMoves: null,
+      hasGeneratedMoves: false
     };
   },
   computed: {
@@ -26,36 +26,30 @@ export default {
   },
   mounted () {
     this.getMovesByPokemonId(1)
+    
   },
   methods: {
-    getMovesByPokemonId(pokemonId) {
-      axios
+    async getMovesByPokemonId(pokemonId) {
+      await axios
       .get(`${this.BASE_URL}/pokemon/${pokemonId}/`)
       .then(response => {
         this.pokemonMoves = response.data.moves
         this.generateMoves()
-        this.setMoveDetails()
+
       })
       .catch(error => {
         console.log(error);
         // this.errored = true
       })
     },
-    setMovesDetailByMoveName(name, index) {
-      axios
-      .get(`${this.BASE_URL}/move/${name}`)
-      .then(response => {
-        this.moves[index].details = {
-          accuracy: response.data.accuracy,
-          category: response.data.damage_class.name,
-          power: response.data.power,
-          type: response.data.type.name
-        }
-      })
-      .catch(error => {
-        console.log(error);
-        // this.errored = true
-      })
+    async getMovesDetailByMoveName(name) {
+      const response = await axios.get(`${this.BASE_URL}/move/${name}`)
+      return await {
+        accuracy: response.data.accuracy,
+        category: response.data.damage_class.name,
+        power: response.data.power,
+        type: response.data.type.name
+      }
     },
     generateMoves() {
       this.pokemonMoves.forEach(move => {
@@ -83,16 +77,19 @@ export default {
             takenGenerations.push(generation)
           }
         })
-        const moveDetails = {
-          name: moveName,
-          generations: generations
-        }
-        this.moves.push(moveDetails)
-      })
-    },
-    setMoveDetails () {
-      this.moves.forEach((move, index) => {
-        this.setMovesDetailByMoveName(move.name, index)
+    
+        this.getMovesDetailByMoveName(moveName)
+        .then(data => {
+          const moveDetails = {
+            name: moveName,
+            details: data,
+            generations: generations
+          }
+          this.moves.push(moveDetails)
+          if (this.pokemonMoves.length === this.moves.length) {
+            this.setJsonData()
+          }
+        })
       })
     },
     getGeneration (version) {
@@ -115,6 +112,10 @@ export default {
         case 'ultra-sun-ultra-moon': return 7
         default: return null
       }
+    },
+    setJsonData() {
+      this.jsonMoves = JSON.stringify(this.moves)
+      console.log(this.jsonMoves)
     }
 
   }
